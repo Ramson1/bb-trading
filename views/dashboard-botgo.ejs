@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviator Bot - Professional Trading Dashboard</title>
+    <style>
+        :root {
+            --primary: #6c5ce7;
+            --primary-dark: #5649c0;
+            --secondary: #00cec9;
+            --success: #00b894;
+            --danger: #d63031;
+            --warning: #fdcb6e;
+            --error: #ff5f57;
+            --info: #48dbfb;
+            --dark: #2d3436;
+            --darker: #1e2124;
+            --light: #f5f6fa;
+            --muted: #8492a2;
+            --glass-bg: rgba(45, 52, 54, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --blur: 15px;
+            --border-radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--darker);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+
+        body {
+            background: linear-gradient(180deg, #0f0f23 0%, #1a1a2e 35%, #151524 100%);
+            min-height: 100vh;
+            color: var(--light);
+            overflow-x: hidden;
+        }
+
+        container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 0 30px 0;
+            backdrop-filter: blur(var(--blur));
+            background: var(--glass-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--glass-border);
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--info));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        header .subtitle {
+            color: var(--primary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .status-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 35px;
+            padding: 18px 30px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur));
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            min-height: 28px;
+            flex-wrap: wrap;
+        }
+
+        .status-banner.running {
+            border-color: rgba(0, 184, 148, 0.6);
+            color: #7dffd4;
+            animation: pulse 2s infinite;
+        }
+
+        .status-banner.waiting {
+            border-color: rgba(253, 203, 110, 0.6);
+            color: var(--warning);
+        }
+
+        .status-banner.error {
+            border-color: rgba(214, 48, 49, 0.7);
+            color: #ff8b8b;
+        }
+
+        .status-banner.stopped {
+            border-color: var(--muted);
+            color: var(--muted);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex: 0 0 auto;
+        }
+
+        .status-dot.running { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .status-dot.waiting { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+        .status-dot.error { background: var(--error); box-shadow: 0 0 8px var(--error); }
+        .status-dot.stopped { background: var(--muted); box-shadow: 0 0 8px var(--muted); }
+
+        .status-text {
+            font-size: 0.85rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            padding: 14px 36px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 4px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, var(--success), #00a884);
+            color: white;
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 25px rgba(0, 184, 148, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, var(--danger), #c02828);
+            color: white;
+        }
+
+        .btn-stop:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 25px rgba(214, 48, 49, 0.4);
+        }
+
+        .btn-live {
+            background: linear-gradient(135deg, var(--warning), #e17055);
+            color: #1a1a2e;
+        }
+
+        .btn-live:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 25px rgba(253, 203, 110, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .panels-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        @media (min-width: 768px) {
+            .panels-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .panels-grid {
+                grid-template-columns: 3fr 1fr 1fr;
+            }
+        }
+
+        .card {
+            backdrop-filter: blur(var(--blur));
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(108, 92, 231, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+        }
+
+        .card-title.critical { color: var(--danger); font-weight: bold; }
+        .card-title.positive { color: var(--success); }
+        .card-title.success { color: var(--primary); }
+
+        .balance-value {
+            font-size: 2.2rem;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+
+        .balance-label {
+            color: var(--muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .profit-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .profit-value.positive { color: var(--success); }
+        .profit-value.negative { color: var(--danger); }
+        .profit-value.neutral { color: var(--muted); }
+
+        .profit-percent {
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+
+        .bet-amount {
+            font-size: 1.5rem;
+            color: var(--info);
+        }
+
+        .target-value {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .stats-section {
+            backdrop-filter: blur(var(--blur));
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 25px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .section-header .view-mode {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 18px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-value.positive { color: var(--success); }
+        .stat-value.negative { color: var(--danger); }
+        .stat-value.primary { color: var(--primary); }
+        .stat-value.info { color: var(--info); }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .progress-container {
+            backdrop-filter: blur(var(--blur));
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 20px 25px;
+            margin: 25px 0;
+        }
+
+        .progress-container .section-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.4s ease, background 0.4s ease;
+        }
+
+        .progress-fill.profit { background: linear-gradient(90deg, var(--success), #00f2fe); }
+        .progress-fill.loss { background: linear-gradient(90deg, var(--danger), #ff5f57); }
+        .progress-fill.breakeven { background: linear-gradient(90deg, var(--muted), #6e7785); }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+
+        .trading-panel {
+            backdrop-filter: blur(var(--blur));
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 25px;
+        }
+
+        .panel-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--muted);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .trade-row {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 15px;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.2s;
+        }
+
+        .trade-row:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .trade-row:last-child { border-bottom: none; }
+
+        .trade-info {
+            font-size: 0.75rem;
+        }
+
+        .trade-info .multiplier {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .trade-info .result {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .trade-info .result.win {
+            background: rgba(0, 184, 148, 0.2);
+            color: var(--success);
+        }
+
+        .trade-info .result.loss {
+            background: rgba(214, 48, 49, 0.2);
+            color: var(--danger);
+        }
+
+        .trade-time {
+            font-size: 0.65rem;
+            color: var(--muted);
+        }
+
+        .trade-amount {
+            font-size: 0.75rem;
+            color: var(--info);
+        }
+
+        .analysis-panel {
+            backdrop-filter: blur(var(--blur));
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 20px;
+        }
+
+        .indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-radius: 6px;
+            margin: 4px 0;
+            font-size: 0.75rem;
+        }
+
+        .indicator.win-streak { background: rgba(0, 184, 148, 0.15); }
+        .indicator.loss-streak { background: rgba(214, 48, 49, 0.15); }
+        .indicator.tag { background: rgba(108, 92, 231, 0.15); color: var(--primary); }
+        .indicator.value { color: var(--muted); font-family: monospace; }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 50px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: var(--muted);
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal-close:hover { color: var(--danger); }
+
+        .loading { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+        .spinner { width: 20px; height: 20px; border: 2px solid var(--glass-border); border-top-color: var(--primary); border-radius: 50; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .no-data { text-align: center; padding: 40px; color: var(--muted); }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0s !important; transition-duration: 0s !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Aviator Bot</h1>
+            <p>Professional Trading & Analytics System</p>
+            <div class="subtitle">Forex-style Analysis | Online Gaming Comparison</div>
+        </header>
+
+        <div class="status-banner" id="status-banner">
+            <span class="status-dot" id="status-dot"></span>
+            <span class="status-text" id="status-text"></span>
+        </div>
+
+        <div class="panels-grid">
+
+            <!-- Left Column: Trading Dashboard -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Live Trading Dashboard</span>
+                    <div class="view-mode" id="view-mode">Real-time</div>
+                </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <span class="card-title">Account Balance</span>
+                    </div>
+                    <div class="balance-value" id="balance">₦<span id="balance-value"></span></div>
+                    <div class="balance-label">Available Funds</div>
+                </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <span class="card-title">Session P&L</span>
+                    </div>
+                    <div class="profit-value" id="profit" style="color: var(--muted);">₦<span id="profit-value">0.00</span></div>
+                    <div class="profit-percent" id="profit-percent"></div>
+                </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <span class="card-title">Profit Target</span>
+                    </div>
+                    <div class="target-value" id="target">₦<span id="target-value"></span></div>
+                    <div class="card-label">Goal for this session</div>
+                </div>
+
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div class="card-header">
+                        <span class="card-title">Current Bet</span>
+                    </div>
+                    <div class="bet-amount" id="current-bet">₦<span id="current-bet-value">0.00</span></div>
+                    <div class="card-label">Next round stake</div>
+                </div>
+
+                <div class="progress-container">
+                    <div class="section-header">
+                        <span>Profit Progress</span>
+                        <span id="progress-status-text">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progress-value">0%</span>
+                        <span id="progress-status">Stopped</span>
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <div class="section-header">
+                        <h2>Session Statistics</h2>
+                        <span class="view-mode" id="small-view"></span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item"><div class="stat-value" id="wins">0</div><div class="stat-label">Wins</div></div>
+                        <div class="stat-item"><div class="stat-value" id="losses">0</div><div class="stat-label">Losses</div></div>
+                        <div class="stat-item"><div class="stat-value" id="win-streak">0</div><div class="stat-label">Win Streak</div></div>
+                        <div class="stat-item"><div class="stat-value" id="loss-streak">0</div><div class="stat-label">Loss Streak</div></div>
+                        <div class="stat-item"><div class="stat-value" id="recovery">₦<span id="recovery-value">0.00</span></div><div class="stat-label">Recovery Amount</div></div>
+                        <div class="stat-item"><div class="stat-value" id="recovery-bet">₦<span id="recovery-bet-value">0.00</span></div><div class="stat-label">Recovery Bet</div></div>
+                        <div class="stat-item"><div class="stat-value" id="session-number">0</div><div class="stat-label">Session #</div></div>
+                        <div class="stat-item"><div class="stat-value" id="auto-restarts">0</div><div class="stat-label">Auto Restarts</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Analysis & History -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Market Analysis</span>
+                </div>
+
+                <div class="analysis-panel">
+                    <div class="panel-title">Technical Indicators</div>
+                    <div class="indicator win-streak" id="win-indicator">
+                        <span>Win Rate</span>
+                        <span class="value" id="win-rate">0%</span>
+                    </div>
+                    <div class="indicator loss-streak" id="loss-indicator">
+                        <span>Loss Rate</span>
+                        <span class="value" id="loss-rate">0%</span>
+                    </div>
+                    <div class="indicator tag" id="profit-factor-indicator">
+                        <span>Profit Factor</span>
+                        <span class="value" id="profit-factor">0.00</span>
+                    </div>
+                    <div class="indicator tag" id="max-multiplier-indicator">
+                        <span>Max Multiplier</span>
+                        <span class="value" id="max-multiplier">0x</span>
+                    </div>
+                    <div class="indicator tag" id="avg-multiplier-indicator">
+                        <span>Avg Multiplier</span>
+                        <span class="value" id="avg-multiplier">0x</span>
+                    </div>
+                    <div class="indicator" id="streak-breakdown-indicator">
+                        <span>Current Streak</span>
+                        <span class="value" id="streak-value">0</span>
+                    </div>
+                </div>
+
+                <div class="analysis-panel" style="margin-top: 25px;">
+                    <div class="panel-title">Recent Rounds <span class="badge" id="history-count">0</span></div>
+                    <div class="trade-ticker" id="trade-ticker" style="max-height: 200px; overflow-y: auto; padding-top: 10px;">
+                        <div class="no-data">No rounds played yet</div>
+                    </div>
+                </div>
+
+                <div class="analysis-panel" style="margin-top: 25px;">
+                    <div class="panel-title">Session Performance</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div>
+                            <div style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Total Profit</div>
+                            <div style="font-size: 1.2rem; color: var(--success)" id="total-profit">₦0.00</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">ROI</div>
+                            <div style="font-size: 1.2rem; color: var(--primary)" id="roi">0.00%</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Sessions Played</div>
+                            <div style="font-size: 1.2rem; color: var(--info)" id="sessions-played">0</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Avg Bet</div>
+                            <div style="font-size: 1.2rem; color: var(--primary)" id="avg-bet">₦0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-start" id="start-btn" onclick="startBot()">Start Bot</button>
+            <button class="btn btn-live" id="live-btn" onclick="goLive()" style="display:none;">Go Live</button>
+            <button class="btn btn-stop" id="stop-btn" onclick="stopBot()">Stop Bot</button>
+        </div>
+
+        <footer>
+            <p>Professional Trading Dashboard | School Project | Personal Data Only | Compare: Online Gaming vs Forex Trading</p>
+        </footer>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal" id="history-modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeHistoryModal()">&times;</span>
+            <h3 style="margin-bottom: 20px; color: var(--primary);">Round History & Analytics</h3>
+            <div class="stats-grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <div style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Total Rounds</div>
+                    <div style="font-size: 1.5rem; color: var(--primary)" id="modal-total-rounds">0</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Total Wins</div>
+                    <div style="font-size: 1.5rem; color: var(--success)" id="modal-total-wins">0</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Total Losses</div>
+                    <div style="font-size: 1.5rem; color: var(--danger)" id="modal-total-losses">0</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Win Rate</div>
+                    <div style="font-size: 1.5rem; color: var(--primary)" id="modal-win-rate">0%</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; max-height: 400px; overflow-y: auto;">
+                <div style="font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Recent Rounds</div>
+                <div id="modal-recent-rounds" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px;">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize variables - ALL CAPS for constants
+        const POLL_MS = 2000;
+        const STATUS_LABELS = {
+            idle: 'Idle',
+            starting: 'Starting Chrome...',
+            waiting_for_login: 'Waiting for login - log in once in the bot Chrome window',
+            dry_run: 'Dry run - watching rounds (no bets placed)',
+            dry_run_ready: 'Dry run complete - ready to go live',
+            live: 'LIVE - placing bets',
+            stopping: 'Stopping - waiting for the active bet to settle',
+            stopped: 'Stopped',
+            stopped_target: 'Target reached - stopped',
+            error: 'Error'
+        };
+
+        const money = value => `₦${Number(value || 0).toFixed(2)}`;
+        const byId = id => document.getElementById(id);
+
+        function setText(id, value) {
+            const el = byId(id);
+            if (el) el.textContent = value;
+        }
+
+        function statusLabel(data) {
+            if (data.status === 'error' && data.error) return data.error;
+            return STATUS_LABELS[data.status] || data.status || 'Idle';
+        }
+
+        // Initialize DOM elements first
+        const statusDot = byId('status-dot');
+        const statusText = byId('status-text');
+
+        function applySnapshot(data) {
+            // Core metrics - use setText with formatted money
+            setText('balance-value', money(data.balance));
+            setText('current-bet-value', money(data.bet));
+            setText('profit-value', money(data.profit));
+            setText('target-value', money(data.target));
+            setText('wins', data.wins ?? 0);
+            setText('losses', data.losses ?? 0);
+            setText('win-streak', data.winStreak ?? 0);
+            setText('loss-streak', data.lossStreak ?? 0);
+            setText('recovery-value', money(data.recoveryRemaining));
+            setText('recovery-bet-value', money(data.recoveryBet));
+            setText('session-number', data.sessionNumber ?? 0);
+            setText('auto-restarts', data.autoRestarts ?? 0);
+
+            // Status banner - set classes manually
+            const banner = byId('status-banner');
+            const dot = byId('status-dot');
+            const txt = byId('status-text');
+
+            if (banner && dot && txt) {
+                const isError = data.status === 'error';
+                const isWaiting = ['waiting_for_login', 'stopping', 'dry_run_ready', 'dry_run'].includes(data.status);
+                const isRunning = data.status === 'live' || data.status === 'starting';
+
+                // Remove all status classes first
+                banner.className = 'status-banner';
+                dot.className = 'status-dot';
+
+                if (isError) {
+                    banner.classList.add('error');
+                    dot.classList.add('error');
+                    txt.textContent = data.error || 'Error';
+                } else if (isWaiting) {
+                    banner.classList.add('waiting');
+                    dot.classList.add('waiting');
+                    txt.textContent = statusLabel(data);
+                } else if (isRunning) {
+                    banner.classList.add('running');
+                    dot.classList.add('running');
+                    txt.textContent = statusLabel(data);
+                } else {
+                    txt.textContent = statusLabel(data);
+                }
+            }
+
+            // Progress bar calculations
+            const target = Number(data.target) || 0;
+            const profit = Number(data.profit) || 0;
+            let percent = target > 0 ? (profit / target) * 100 : 0;
+            if (data.status === 'stopped_target') percent = 100;
+            percent = Math.max(0, Math.min(100, percent));
+
+            const fill = byId('progress-fill');
+            const statusTxt = byId('progress-status-text');
+            const progressVal = byId('progress-value');
+
+            if (fill) {
+                fill.style.width = `${percent.toFixed(1)}%`;
+                fill.className = `progress-fill ${profit >= target ? 'profit' : (profit < 0 ? 'loss' : 'breakeven')}`;
+            }
+            if (statusTxt) statusTxt.textContent = `${percent.toFixed(1)}%`;
+            if (progressVal) progressVal.textContent = `${percent.toFixed(1)}%`;
+            setText('profit-percent', `${percent.toFixed(1)}% of target`);
+
+            // Control buttons state
+            const running = !!data.running;
+            const startBtn = byId('start-btn');
+            const stopBtn = byId('stop-btn');
+            const liveBtn = byId('live-btn');
+
+            if (startBtn) {
+                startBtn.disabled = running;
+                startBtn.innerHTML = running
+                    ? '<span class="status-indicator status-running"></span> Running...'
+                    : '<span class="status-indicator status-stopped"></span> Start Bot';
+            }
+            if (stopBtn) stopBtn.disabled = !running;
+            if (liveBtn) {
+                const showLive = !data.live && data.status === 'dry_run_ready';
+                liveBtn.style.display = showLive ? '' : 'none';
+                liveBtn.disabled = !showLive;
+            }
+
+            // Update small view label
+            const smallView = byId('small-view');
+            if (smallView) smallView.textContent = `Session #${data.sessionNumber}`;
+
+            // Update analytics
+            updateAnalytics(data);
+        }
+
+        function updateAnalytics(data) {
+            // Win/Loss rate
+            const total = (data.wins || 0) + (data.losses || 0);
+            const winRate = total > 0 ? ((data.wins || 0) / total) * 100 : 0;
+            const lossRate = total > 0 ? ((data.losses || 0) / total) * 100 : 0;
+            setText('win-rate', `${winRate.toFixed(1)}%`);
+            setText('loss-rate', `${lossRate.toFixed(1)}%`);
+
+            // Profit factor
+            let profitFactor = 0;
+            if (data.losses && data.losses > 0) {
+                profitFactor = Math.abs(Number(data.profit)) / (data.losses * Number(data.recoveryBet || data.bet || 1));
+            }
+            setText('profit-factor', profitFactor.toFixed(2));
+
+            // Set indicator colors and values
+            const streakValue = data.winStreak || data.lossStreak || 0;
+            setText('streak-value', streakValue);
+
+            // Update indicator classes
+            const winInd = byId('win-indicator');
+            const lossInd = byId('loss-indicator');
+            if (winInd) {
+                winInd.className = `indicator ${streakValue > 0 ? 'win-streak' : 'loss-streak'}`;
+            }
+            if (lossInd) {
+                lossInd.className = `indicator ${streakValue < 0 ? 'loss-streak' : 'win-streak'}`;
+            }
+        }
+
+        // Fetch round history and update ticker
+        async function fetchAndUpdateHistory() {
+            try {
+                const response = await fetch('/history?limit=50', { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const { history, stats } = await response.json();
+
+                // Update history ticker
+                updateHistoryTicker(history);
+
+                // Update analytics from stats
+                if (stats && stats.total > 0) {
+                    setText('modal-total-rounds', stats.total);
+                    setText('modal-total-wins', stats.wins);
+                    setText('modal-total-losses', stats.losses);
+                    const winRate = (stats.wins / stats.total * 100).toFixed(1);
+                    setText('modal-win-rate', `${winRate}%`);
+
+                    // Update dashboard stats
+                    setText('win-rate', `${winRate}%`);
+                    setText('loss-rate', `${(100 - winRate).toFixed(1)}%`);
+
+                    // Profit factor (approximate)
+                    const pf = (stats.profit / Math.max(1, stats.losses * 50)).toFixed(2);
+                    setText('profit-factor', pf);
+
+                    // Average and max multiplier
+                    if (stats.avgMultiplier > 0) setText('avg-multiplier', `${stats.avgMultiplier.toFixed(2)}x`);
+                    if (stats.maxMultiplier > 0) setText('max-multiplier', `${stats.maxMultiplier.toFixed(2)}x`);
+                }
+            } catch (error) {
+                console.error('Error fetching history:', error);
+            }
+        }
+
+        function updateHistoryTicker(history) {
+            const ticker = byId('trade-ticker');
+            const countEl = byId('history-count');
+
+            if (!ticker || !countEl) return;
+
+            if (history.length === 0) {
+                ticker.innerHTML = '<div class="no-data">No rounds played yet</div>';
+                countEl.textContent = '0';
+                return;
+            }
+
+            countEl.textContent = history.length;
+
+            // Show last 10 rounds
+            const recent = history.slice(-10);
+            let html = '';
+
+            recent.forEach(round => {
+                const resultClass = round.result === 'win' ? 'win' : 'loss';
+                const multiplier = round.multiplier || 1;
+                const amount = round.amount || 0;
+                const timestamp = round.timestamp || '';
+
+                html += `
+                    <div class="trade-row">
+                        <div class="trade-info">
+                            <span class="multiplier">${multiplier.toFixed(2)}x</span>
+                            <span class="result ${resultClass}">${round.result.toUpperCase()}</span>
+                        </div>
+                        <div class="trade-amount">₦${Number(amount).toFixed(2)}</div>
+                        <div class="trade-time">${timestamp.slice(11, 16)}</div>
+                    </div>
+                `;
+            });
+
+            ticker.innerHTML = html || '<div class="no-data">No rounds played yet</div>';
+        }
+
+        // Modal handlers
+        window.openHistoryModal = function() {
+            fetch('/history?limit=200').then(response => response.json()).then(data => {
+                const { history, stats } = data;
+                const modal = byId('history-modal');
+                if (!modal) return;
+
+                if (stats && stats.total > 0) {
+                    setText('modal-total-rounds', stats.total);
+                    setText('modal-total-wins', stats.wins);
+                    setText('modal-total-losses', stats.losses);
+                    const winRate = (stats.wins / stats.total * 100).toFixed(1);
+                    setText('modal-win-rate', `${winRate}%`);
+                }
+
+                // Populate recent rounds
+                const recentContainer = byId('modal-recent-rounds');
+                if (recentContainer && history.length > 0) {
+                    const recent = history.slice(-20);
+                    let html = '';
+
+                    recent.forEach(round => {
+                        const resultClass = round.result === 'win' ? 'win' : 'loss';
+                        const multiplier = round.multiplier || 1;
+                        const amount = round.amount || 0;
+                        const isoTime = round.isoTime || round.timestamp || '';
+
+                        html += `
+                            <div class="trade-row" style="padding: 8px 0; border-radius: 6px;">
+                                <div class="trade-info" style="font-size: 0.7rem;">
+                                    <span class="multiplier" style="color: var(--primary);">${multiplier.toFixed(2)}x</span>
+                                    <span class="result ${resultClass}" style="padding: 2px 6px; font-size: 0.6rem;">${round.result.toUpperCase()}</span>
+                                </div>
+                                <div class="trade-amount" style="font-size: 0.75rem; color: var(--info);">₦${Number(amount).toFixed(2)}</div>
+                                <div class="trade-time" style="font-size: 0.6rem; color: var(--muted);">${isoTime ? isoTime.slice(11, 16) : '—'}</div>
+                            </div>
+                        `;
+                    });
+
+                    recentContainer.innerHTML = html || '<div class="no-data" style="padding: 20px;">No rounds played yet</div>';
+                }
+
+                modal.style.display = 'flex';
+            });
+        };
+
+        window.closeHistoryModal = function() {
+            const modal = byId('history-modal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        // Close modal on overlay click
+        window.onclick = function(event) {
+            const modal = byId('history-modal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        // Initial fetch functions
+        async function fetchData() {
+            try {
+                const response = await fetch('/data', { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                applySnapshot(await response.json());
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                if (statusText) statusText.textContent = 'Dashboard cannot reach the bot server';
+                if (statusDot) statusDot.className = 'status-dot error';
+            }
+        }
+
+        async function postAction(path) {
+            const response = await fetch(path, { method: 'POST' });
+            let payload = {};
+            try { payload = await response.json(); } catch (_) {}
+            if (!response.ok) {
+                const message = payload.error || payload.message || `Request failed (${response.status})`;
+                if (statusText) statusText.textContent = message;
+            }
+            await fetchData();
+            await fetchAndUpdateHistory();
+            return payload;
+        }
+
+        // Event listeners
+        document.getElementById('start-btn')?.addEventListener('click', startBot);
+        document.getElementById('stop-btn')?.addEventListener('click', stopBot);
+        document.getElementById('live-btn')?.addEventListener('click', goLive);
+        document.getElementById('history-count')?.addEventListener('click', openHistoryModal);
+
+        // Start polling
+        fetchData();
+        setInterval(fetchData, POLL_MS);
+        setInterval(fetchAndUpdateHistory, 10000);
+    </script>
+</body>
+</html>
